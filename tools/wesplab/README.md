@@ -140,6 +140,8 @@ The optional Frida adapter under `optional/frida/` records the private `FilterSe
 
 Semantic decoding for non-ProcessCreate families, arbitrary live rule materialization, collection/context values, and pointer schemas for every private request still require runtime layout confirmation. The tools preserve opaque bytes and refuse unsupported live materialization instead of guessing.
 
+See the repository [security policy](../../SECURITY.md) for responsible reporting guidance.
+
 See [NOTIFICATIONS.md](docs/NOTIFICATIONS.md), [BUILD_PIPELINE.md](docs/BUILD_PIPELINE.md), [AUTHZ.md](docs/AUTHZ.md), [RULE_DSL.md](docs/RULE_DSL.md), [ETW_TIMELINE.md](docs/ETW_TIMELINE.md), [WIRE.md](docs/WIRE.md), [HEALTH.md](docs/HEALTH.md), [SAFETY.md](docs/SAFETY.md), and [VALIDATION.md](docs/VALIDATION.md).
 
 ## License

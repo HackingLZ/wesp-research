@@ -40,7 +40,7 @@ The exact Microsoft public PDB was recovered from the Microsoft symbol server an
 | Defined strings | 4,957 |
 | Decompiled functions that failed | 4 |
 
-The complete pseudocode is in `analysis/espclient/ghidra/decompiled-all.c`; the four failures are recorded separately. Machine-readable function, call-graph, import, export, string, Rust-function, and signature inventories are under `analysis/espclient/`.
+The complete pseudocode was generated locally and is not distributed; its four failures are recorded in `analysis/espclient.dll/ghidra/decompiled-all.c.failures.tsv`. Machine-readable function, call-graph, import, export, string, Rust-function, and signature inventories are under `analysis/espclient.dll/`.
 
 This is static analysis. Prototypes inferred without private type records are approximate, and runtime claims are explicitly identified as test candidates.
 
@@ -109,7 +109,7 @@ The port's default Filter Manager descriptor limits access to administrators and
 
 `FilterSendMessage` always receives a fixed `0x40`-byte outer request. The first machine word is the request discriminator. Remaining fields contain inline scalars and pointers/lengths for nested user buffers. The driver probes the outer input and output and uses bounded copy helpers for nested data; no blind kernel dereference of a user pointer was found.
 
-The complete recovered discriminator table is in `analysis/espclient/protocol.tsv`. The public operations cover IDs `0x00..0x1c`; ID `0x05` remains unmapped to a public wrapper. Important IDs include:
+The complete recovered discriminator table is in `analysis/espclient.dll/protocol.tsv`. The public operations cover IDs `0x00..0x1c`; ID `0x05` remains unmapped to a public wrapper. Important IDs include:
 
 | ID | Operation |
 |---:|---|
@@ -186,11 +186,11 @@ Disconnect transitions the listener from active to disconnecting, cancels I/O, w
 | `0x1800ddab0` | `EventQueue::NotificationCallback` | Payload retrieval and callback/IOCP dispatch |
 | `0x1800ddea0` | `EventQueue::Connect` | Kind-4 connection and delivery-mode setup |
 
-The complete address/signature reference is `analysis/espclient/export-signatures.tsv`; all internal functions are in `analysis/espclient/ghidra/functions.tsv`.
+The complete address/signature reference is `analysis/espclient.dll/export-signatures.tsv`; all internal functions are in `analysis/espclient.dll/ghidra/functions.tsv`.
 
 ## Interoperability
 
-`analysis/espclient/espclient.def` lists every public export and can be passed to Microsoft's `lib.exe /def` or LLVM's `llvm-dlltool` to create an import library. Reconstructing a safe SDK still requires version-pinned C declarations for private descriptors and enums. Do not call the raw Rust `EspRs*` internals by address: they are not exported and are compiler-ABI/version dependent.
+`analysis/espclient.dll/espclient.def` lists every public export and can be passed to Microsoft's `lib.exe /def` or LLVM's `llvm-dlltool` to create an import library. Reconstructing a safe SDK still requires version-pinned C declarations for private descriptors and enums. Do not call the raw Rust `EspRs*` internals by address: they are not exported and are compiler-ABI/version dependent.
 
 ## Related public research
 

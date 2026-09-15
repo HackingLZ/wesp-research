@@ -57,7 +57,7 @@ espclient.dll -> FltLib -> wesp.sys
 optional lab-only wire interceptor/mutator
 ```
 
-Do not link directly to undocumented exports in the first release. Dynamic resolution permits a clear missing-export error and makes multi-build support practical. `analysis/espclient/espclient.def` can generate an import library later for exact-build test programs.
+Do not link directly to undocumented exports in the first release. Dynamic resolution permits a clear missing-export error and makes multi-build support practical. `analysis/espclient.dll/espclient.def` can generate an import library later for exact-build test programs.
 
 ## Tool modules worth building
 

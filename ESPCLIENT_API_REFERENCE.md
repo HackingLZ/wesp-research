@@ -1,6 +1,6 @@
 # `espclient.dll` API reference
 
-This is a recovered, version-specific reference for the 120 exported functions in `espclient.dll` `0.1.0.156346177+c3490e8c`. Names and addresses are exact; prototypes in `analysis/espclient/export-signatures.tsv` are Ghidra approximations because the public PDB contains no private type records.
+This is a recovered, version-specific reference for the 120 exported functions in `espclient.dll` `0.1.0.156346177+c3490e8c`. Names and addresses are exact; prototypes in `analysis/espclient.dll/export-signatures.tsv` are Ghidra approximations because the public PDB contains no private type records.
 
 Common conventions:
 
@@ -172,7 +172,7 @@ The non-exported `EspRs*` layer includes `EspRsCreateFilter`, `EspRsCreateCompos
 
 ## Build integration
 
-`analysis/espclient/espclient.def` is the authoritative export-name list. On a Windows development machine:
+`analysis/espclient.dll/espclient.def` is the authoritative export-name list. On a Windows development machine:
 
 ```bat
 lib.exe /def:espclient.def /machine:x64 /out:espclient.lib

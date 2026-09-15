@@ -346,7 +346,7 @@ The image contains the following event-type names:
 
 ## Exported minifilter ABI
 
-The image exports 50 ordinals. Several are standard C++ support symbols; the rest expose the C minifilter bridge. Exact addresses are in `analysis/ghidra/exports.tsv`.
+The image exports 50 ordinals. Several are standard C++ support symbols; the rest expose the C minifilter bridge. Exact addresses are in `analysis/wesp.sys/ghidra/exports.tsv`.
 
 | Group | Exports |
 |---|---|
@@ -393,31 +393,30 @@ Kernel callbacks generally fail open when metadata collection alone fails, but a
 
 | Artifact | Contents |
 |---|---|
-| `analysis/wesp.pdb` | Exact downloaded Microsoft public PDB |
-| `analysis/pdb-symbols.txt` | 36,294-line raw public/global symbol dump |
-| `analysis/pdb-types.txt` | PDB type-summary output; sparse because symbols are stripped |
-| `analysis/ghidra/functions.tsv` | All 3,947 discovered local functions: address, size, name, prototype, flags |
-| `analysis/ghidra/callgraph.tsv` | 29,943 direct caller/callee edges |
-| `analysis/ghidra/external-functions.tsv` | All 261 resolved imported functions |
-| `analysis/ghidra/exports.tsv` | Export labels, ordinals, aliases, and addresses |
-| `analysis/ghidra/strings.tsv` | All 732 Ghidra-defined strings and references |
-| `analysis/ghidra/memory-blocks.tsv` | Loaded image memory map |
-| `analysis/ghidra/decompiled-all.c` | First pseudocode volume, 20,093,864 bytes / 518,142 lines |
-| `analysis/ghidra/decompiled-rest.c` | Second pseudocode volume, 7,051,085 bytes / 188,828 lines |
-| `analysis/ghidra/decompiled-rest.c.failures.tsv` | Named/addressed functions skipped or failed in volume two |
-| `analysis/ghidra/decompile-failures.tsv` | One additional failed function from volume one |
-| `ghidra_project_final/wesp` | Persisted, symbolized Ghidra project |
+| `analysis/wesp.sys/pdb-symbols.txt` | 36,294-line raw public/global symbol dump |
+| `analysis/wesp.sys/pdb-types.txt` | PDB type-summary output; sparse because symbols are stripped |
+| `analysis/wesp.sys/ghidra/functions.tsv` | All 3,947 discovered local functions: address, size, name, prototype, flags |
+| `analysis/wesp.sys/ghidra/callgraph.tsv` | 29,943 direct caller/callee edges |
+| `analysis/wesp.sys/ghidra/external-functions.tsv` | All 261 resolved imported functions |
+| `analysis/wesp.sys/ghidra/exports.tsv` | Export labels, ordinals, aliases, and addresses |
+| `analysis/wesp.sys/ghidra/strings.tsv` | All 732 Ghidra-defined strings and references |
+| `analysis/wesp.sys/ghidra/memory-blocks.tsv` | Loaded image memory map |
+| `decompiled-all.c` (local only) | First pseudocode volume, 20,093,864 bytes / 518,142 lines |
+| `decompiled-rest.c` (local only) | Second pseudocode volume, 7,051,085 bytes / 188,828 lines |
+| `analysis/wesp.sys/ghidra/decompiled-rest.c.failures.tsv` | Named/addressed functions skipped or failed in volume two |
+| `analysis/wesp.sys/ghidra/decompile-failures.tsv` | One additional failed function from volume one |
+| Ghidra project (local only) | Persisted, symbolized instruction-level analysis |
 | `ghidra_scripts/ConfigureWespAnalysis.java` | Disables the pathological decompiler switch analyzer |
 | `ghidra_scripts/ExportWespInventory.java` | Recreates inventory TSV files |
 | `ghidra_scripts/DecompileWespAll.java` | Recreates bounded full-image pseudocode volumes |
 
-The two pseudocode files are intentionally split so editors and indexing tools can handle them. Function names and addresses are the reliable index; Ghidra-generated C types and parameter names are approximations.
+The two local pseudocode files were split so editors and indexing tools could handle them. They are reproducible outputs and are not distributed. Function names and addresses are the reliable index; Ghidra-generated C types and parameter names are approximations.
 
 ## Reproduction notes
 
-The analyzed Ghidra project is `ghidra_project_final/wesp`, program `/wesp.sys`. Ghidra 12.0.3 was used with the exact PDB. The default **Decompiler Switch Analysis** analyzer was disabled because it misidentifies very large Rust enum/monomorphization dispatch regions as switch tables and can run indefinitely. All other normal analyzers completed.
+The local Ghidra project contained program `/wesp.sys`. Ghidra 12.0.3 was used with the exact PDB. The default **Decompiler Switch Analysis** analyzer was disabled because it misidentifies very large Rust enum/monomorphization dispatch regions as switch tables and can run indefinitely. All other normal analyzers completed.
 
-To investigate a function, search `analysis/ghidra/functions.tsv` for its symbol, then use its address in the Ghidra project or search the two pseudocode volumes for the header form `name @ address`. Use `callgraph.tsv` for direct static callers and callees. Indirect trait calls, callback tables, guarded indirect calls, and jump-table dispatch cannot all appear as direct edges.
+To investigate a function, search `analysis/wesp.sys/ghidra/functions.tsv` for its symbol, then use its address in a reproduced Ghidra project or generated pseudocode. Use `callgraph.tsv` for direct static callers and callees. Indirect trait calls, callback tables, guarded indirect calls, and jump-table dispatch cannot all appear as direct edges.
 
 ## Source/module provenance recovered from paths
 

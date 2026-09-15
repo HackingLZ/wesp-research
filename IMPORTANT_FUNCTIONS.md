@@ -1,6 +1,6 @@
 # WESP important-function reference
 
-This is the curated function-level companion to [REVERSE_ENGINEERING.md](REVERSE_ENGINEERING.md). It focuses on routines that define WESP's behavior, trust boundaries, policy decisions, persistence, and lifecycle. Compiler glue, generic Rust destructors, formatting functions, and repeated event-type monomorphizations remain searchable in `analysis/ghidra/functions.tsv` and the two decompiler volumes.
+This is the curated function-level companion to [REVERSE_ENGINEERING.md](REVERSE_ENGINEERING.md). It focuses on routines that define WESP's behavior, trust boundaries, policy decisions, persistence, and lifecycle. Compiler glue, generic Rust destructors, formatting functions, and repeated event-type monomorphizations remain searchable in `analysis/wesp.sys/ghidra/functions.tsv` and the two decompiler volumes.
 
 ## Reading conventions
 
@@ -8,7 +8,7 @@ This is the curated function-level companion to [REVERSE_ENGINEERING.md](REVERSE
 - Names come from the exact Microsoft public PDB where available.
 - Ghidra prototypes are approximate because the public PDB is stripped.
 - A “family” means Rust emitted a specialized copy for many event types; representative functions are documented instead of repeating identical architecture dozens of times.
-- Direct and indirect call evidence is available in `analysis/ghidra/callgraph.tsv` and the saved Ghidra project.
+- Direct and indirect call evidence is available in `analysis/wesp.sys/ghidra/callgraph.tsv` and the saved Ghidra project.
 
 ## 1. Driver lifecycle
 
@@ -305,8 +305,8 @@ Compares boot identity and persisted-state health, then repairs, resets, or relo
 
 For functions outside this curated set:
 
-- `analysis/ghidra/functions.tsv` contains all 3,947 discovered functions.
-- `analysis/ghidra/callgraph.tsv` contains 29,943 direct edges.
-- `analysis/ghidra/decompiled-all.c` and `decompiled-rest.c` contain approximately 27 MB of pseudocode.
-- `analysis/ghidra/decompiled-rest.c.failures.tsv` and `decompile-failures.tsv` identify decompiler gaps.
-- `ghidra_project_final/wesp.gpr` opens the symbolized instruction-level project.
+- `analysis/wesp.sys/ghidra/functions.tsv` contains all 3,947 discovered functions.
+- `analysis/wesp.sys/ghidra/callgraph.tsv` contains 29,943 direct edges.
+- `ghidra_scripts/DecompileWespAll.java` regenerates the approximately 27 MB of local pseudocode from the exact sample.
+- `analysis/wesp.sys/ghidra/decompiled-rest.c.failures.tsv` and `analysis/wesp.sys/ghidra/decompile-failures.tsv` identify known decompiler gaps.
+- The local Ghidra project and generated pseudocode are deliberately not distributed.

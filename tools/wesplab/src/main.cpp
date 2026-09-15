@@ -26,7 +26,7 @@
 namespace {
 
 using namespace wesplab::abi_0_1_0_156346177;
-#include "expected_exports.inc"
+#include <expected_exports.inc>
 
 constexpr wchar_t kLabMarker[] = L"C:\\ProgramData\\wesplab\\LAB_MACHINE";
 constexpr wchar_t kClientName[] = L"wesplab research client";

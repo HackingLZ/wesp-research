@@ -1,9 +1,14 @@
 .DS_Store
 .venv/
-dist/
+venv/
+**/dist/
+**/build/
+**/build-*/
 **/__pycache__/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/*.egg-info/
 *.py[cod]
 *.etl
 *.dmp
-tools/wesplab/build/
-tools/wesplab/build-*/
