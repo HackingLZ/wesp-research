@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wesplab.invalid/schemas/rule.schema.json",
+  "title": "WespLab rule DSL",
+  "type": "object",
+  "required": ["schema", "event", "action"],
+  "properties": {
+    "schema": {"const": "wesplab.rule.v1"},
+    "id": {"type": "string"},
+    "event": {"type": "object", "required": ["type"], "properties": {
+      "type": {"type": ["string", "integer"]},
+      "properties": {"type": "array", "items": {"type": "integer", "minimum": 0}}
+    }},
+    "filter": {"type": ["object", "null"]},
+    "action": {"type": "object", "required": ["type"], "properties": {
+      "type": {"enum": ["notify", "allow", "block"]}
+    }},
+    "lifetime": {"type": "string"},
+    "order_group": {"type": "integer"}
+  }
+}
+

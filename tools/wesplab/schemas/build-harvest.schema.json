@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wesplab.invalid/schemas/build-harvest.schema.json",
+  "title": "WespLab build harvest",
+  "type": "object",
+  "required": ["schema", "windows_build", "artifacts"],
+  "properties": {
+    "schema": {"const": "wesplab.build-harvest.v1"},
+    "windows_build": {"type": "string"},
+    "etw_provider_guids": {"type": "object", "additionalProperties": {"type": "string"}},
+    "etw_schema_sha256": {"type": ["string", "null"]},
+    "microsoft_binaries_included": {"type": "boolean"},
+    "artifacts": {"type": "array", "items": {"type": "object", "required": ["logical_name", "sha256", "size"], "properties": {
+      "logical_name": {"type": "string"}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+      "size": {"type": "integer", "minimum": 0}, "version": {"type": ["string", "null"]},
+      "exports": {"type": "array", "items": {"type": "string"}}
+    }}}
+  }
+}

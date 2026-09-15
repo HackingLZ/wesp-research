@@ -1,0 +1,2 @@
+address	name	reason
+1800652d0	core::ptr::drop_in_place<enum2$<core::option::Option<enum2$<wesp_api_types::schema::notification::file::FoTargetObjectNotificationConfig>_>_>_>	 Low-level Error: Cannot properly adjust input varnodes

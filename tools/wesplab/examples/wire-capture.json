@@ -1,0 +1,10 @@
+{
+  "schema": "wesplab.wire-capture.v1",
+  "abi": "0.1.0.156346177+c3490e8c",
+  "operation": "enumerate_registered_clients",
+  "envelope_hex": "07000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+  "regions": [],
+  "relocations": [],
+  "result_hresult": 0
+}
+

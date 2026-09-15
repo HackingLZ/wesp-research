@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wesplab.invalid/schemas/health-heartbeat.schema.json",
+  "title": "WespLab defensive health heartbeat",
+  "type": "object",
+  "required": ["schema", "timestamp_utc", "latency_ms", "registered", "connected"],
+  "properties": {
+    "schema": {"const": "wesplab.health-heartbeat.v1"},
+    "timestamp_utc": {"type": "string"}, "latency_ms": {"type": "integer", "minimum": 0},
+    "registered": {"type": "array", "items": {"type": "string"}},
+    "connected": {"type": "array", "items": {"type": "string"}},
+    "missing_expected_clients": {"type": "array", "items": {"type": "string"}},
+    "espclient_integrity_ok": {"type": "boolean"}, "driver_integrity_ok": {"type": "boolean"}
+  }
+}

@@ -1,0 +1,19 @@
+[project]
+name = "wesplab"
+version = "0.2.0"
+description = "Version-pinned WESP reverse-engineering and lab toolkit"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+
+[project.scripts]
+wesplab-offline = "wesplab:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["wesplab", "wesplab_ext"]
+
+[tool.ruff]
+line-length = 100

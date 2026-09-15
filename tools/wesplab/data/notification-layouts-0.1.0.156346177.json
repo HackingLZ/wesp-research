@@ -1,0 +1,16 @@
+{
+  "schema": "wesplab.notification-layouts.v1",
+  "abi": "0.1.0.156346177+c3490e8c",
+  "event_types": {
+    "1000": {
+      "family": "ProcessCreate",
+      "confidence": "partial-confirmed",
+      "minimum_event_data_size": 128,
+      "fields": [
+        {"name": "instance_id", "source": "event_data", "offset": 0, "type": "u64"},
+        {"name": "rule_id", "source": "event_data", "offset": 8, "type": "guid"},
+        {"name": "event_type", "source": "event_data", "offset": 120, "type": "u32"}
+      ]
+    }
+  }
+}

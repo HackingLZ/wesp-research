@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wesplab.invalid/schemas/notification-capture.schema.json",
+  "title": "WespLab notification capture",
+  "type": "object",
+  "required": ["schema", "event_data_hex", "external_payload_hex", "truncated"],
+  "properties": {
+    "schema": {"const": "wesplab.notification-capture.v1"},
+    "timestamp_utc": {"type": "string"},
+    "queue_id": {"type": "string"},
+    "event_type": {"type": "integer", "minimum": 0},
+    "event_data_hex": {"type": "string", "pattern": "^(?:[0-9a-fA-F]{2})*$"},
+    "external_payload_hex": {"type": "string", "pattern": "^(?:[0-9a-fA-F]{2})*$"},
+    "external_size": {"type": "integer", "minimum": 0},
+    "truncated": {"type": "boolean"},
+    "payload_readable": {"type": "boolean"}
+  }
+}
+

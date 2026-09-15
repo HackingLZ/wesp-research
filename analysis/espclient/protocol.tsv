@@ -1,0 +1,37 @@
+kind	id	operation	direction	confidence	notes
+connect	0	reserved_or_internal	user_to_kernel	medium	Accepted by driver; no public espclient.dll entry point observed using it
+connect	1	register_client	user_to_kernel	high	GUID plus two counted UTF-16 strings; minimum 0x18 bytes
+connect	2	unregister_client	user_to_kernel	high	GUID; 0x14 bytes
+connect	3	connect_client	user_to_kernel	high	GUID; 0x14 bytes; returned port remains open
+connect	4	connect_event_queue	user_to_kernel	high	client GUID plus queue GUID; 0x24 bytes
+connect	5	management_query	user_to_kernel	high	Used by enumerate/query descriptor; header-only 0x0c-byte context
+connect	6	queue_state_change_listener	user_to_kernel	high	client GUID, queue GUID, two flags; 0x28 bytes
+request	0x00	update_rules	user_to_kernel	high	Rust serializer supplies nested rule update array
+request	0x01	set_event_object_context	user_to_kernel	high	Serialized context-key update tied to an event object
+request	0x02	complete_async_notification	user_to_kernel	high	Notification/correlation identifier
+request	0x03	reference_event_object	user_to_kernel	high	Object type plus type-specific descriptor
+request	0x04	close_event_object_reference	user_to_kernel	high	Opaque kernel reference identifier
+request	0x05	reserved_or_unrecovered	user_to_kernel	low	Accepted dispatch slot; no direct public wrapper mapping recovered
+request	0x06	query_object_properties	bidirectional	high	Object family and property selection; variable output
+request	0x07	enumerate_registered_clients	kernel_to_user	high	GUID array
+request	0x08	enumerate_connected_clients	kernel_to_user	high	GUID array
+request	0x09	query_client_descriptor	kernel_to_user	high	Variable descriptor with strings
+request	0x0a	get_event_capabilities	kernel_to_user	high	Fixed 4-byte result
+request	0x0b	enumerate_client_rules	kernel_to_user	high	Enumeration mode plus GUID array
+request	0x0c	remove_all_client_rules	user_to_kernel	high	No output
+request	0x0d	remove_client_rules	user_to_kernel	high	Mode-dependent list/range payload
+request	0x0e	set_client_context_key	user_to_kernel	high	Serialized context-key update
+request	0x0f	enumerate_client_context_keys	kernel_to_user	high	Variable output
+request	0x10	enumerate_event_object_context_keys	kernel_to_user	high	Reference identifier plus variable output
+request	0x11	create_collection	bidirectional	high	Descriptor in; fixed maximum 0x20-byte response
+request	0x12	open_collection	bidirectional	high	Collection GUID in; 0x20-byte response
+request	0x13	close_collection	user_to_kernel	high	Collection handle/id
+request	0x14	update_collection	user_to_kernel	high	Update kind plus serialized entries
+request	0x15	enumerate_collection_ids	kernel_to_user	high	Lifetime selector plus GUID array
+request	0x16	enumerate_collection_entries	kernel_to_user	high	Variable output
+request	0x17	clear_event_queue	user_to_kernel	high	Queue GUID
+request	0x18	enumerate_event_queue_ids	kernel_to_user	high	Lifetime selector plus GUID array
+request	0x19	create_event_queue	bidirectional	high	Descriptor in; fixed 8-byte result
+request	0x1a	open_event_queue	bidirectional	high	Queue GUID in; fixed 8-byte result
+request	0x1b	close_event_queue	user_to_kernel	high	Queue handle/id
+request	0x1c	get_notification_payload	kernel_to_user	high	Notification id; variable payload output

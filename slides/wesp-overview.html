@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>Inside the WESP Driver</title>
+  <style>
+    :root {
+      --bg: #07101b;
+      --panel: #0d1a29;
+      --panel2: #102338;
+      --ink: #edf6ff;
+      --muted: #91a8bc;
+      --cyan: #34d9d1;
+      --blue: #55a7ff;
+      --amber: #ffbf69;
+      --red: #ff6b7a;
+      --green: #74e0a3;
+      --line: #24415a;
+    }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #02070d; color: var(--ink); }
+    body { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    #stage { position: absolute; width: 1600px; height: 900px; left: 50%; top: 50%; transform-origin: center; }
+    .slide {
+      position: absolute; inset: 0; display: none; padding: 66px 82px 58px;
+      background:
+        radial-gradient(circle at 92% 8%, rgba(52,217,209,.12), transparent 28%),
+        radial-gradient(circle at 4% 90%, rgba(85,167,255,.10), transparent 32%),
+        linear-gradient(135deg, #07101b 0%, #081522 100%);
+    }
+    .slide.active { display: block; }
+    .slide::before { content: ""; position: absolute; inset: 22px; border: 1px solid rgba(52,217,209,.14); pointer-events: none; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { font-size: 74px; line-height: 1.02; letter-spacing: -2.5px; max-width: 1180px; margin-bottom: 26px; }
+    h2 { font-size: 50px; letter-spacing: -1.5px; margin-bottom: 34px; }
+    h3 { color: var(--cyan); font-size: 22px; text-transform: uppercase; letter-spacing: 1.6px; margin-bottom: 14px; }
+    p, li { font-size: 24px; line-height: 1.42; }
+    .lead { font-size: 32px; color: #c7d9e8; max-width: 1160px; }
+    .eyebrow { color: var(--cyan); text-transform: uppercase; letter-spacing: 3px; font-weight: 800; font-size: 16px; margin-bottom: 20px; }
+    .accent { color: var(--cyan); }
+    .muted { color: var(--muted); }
+    .mono { font-family: "SFMono-Regular", Consolas, monospace; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+    .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+    .grid5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+    .card { background: linear-gradient(145deg, rgba(16,35,56,.92), rgba(10,25,40,.92)); border: 1px solid var(--line); border-radius: 16px; padding: 25px 27px; }
+    .card p, .card li { font-size: 20px; }
+    .card strong { color: white; }
+    .stat { font-size: 52px; font-weight: 850; color: var(--cyan); line-height: 1; margin-bottom: 10px; }
+    .tag { display: inline-block; padding: 7px 12px; border: 1px solid var(--line); border-radius: 999px; color: #bcd1e3; font-size: 16px; margin: 3px; }
+    .flow { display: flex; align-items: stretch; justify-content: center; gap: 12px; margin: 36px 0; }
+    .node { flex: 1; min-width: 0; padding: 24px 18px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); text-align: center; font-size: 21px; display: flex; flex-direction: column; justify-content: center; }
+    .node b { color: var(--cyan); margin-bottom: 8px; }
+    .arrow { align-self: center; color: var(--cyan); font-size: 33px; }
+    .lane { display: grid; grid-template-columns: 220px 1fr; gap: 18px; align-items: center; margin: 14px 0; }
+    .lane-label { font-weight: 800; color: var(--cyan); text-align: right; padding-right: 18px; }
+    .lane-body { display: flex; gap: 12px; align-items: center; }
+    .pill { background: var(--panel2); border: 1px solid var(--line); border-radius: 11px; padding: 15px 18px; font-size: 19px; }
+    .boundary { border: 2px dashed rgba(255,191,105,.55); border-radius: 18px; padding: 28px; position: relative; }
+    .boundary::after { content: attr(data-label); position: absolute; right: 20px; top: -13px; padding: 3px 10px; background: #081522; color: var(--amber); font-size: 15px; text-transform: uppercase; letter-spacing: 1.5px; }
+    .decision { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 22px; align-items: center; margin-top: 30px; }
+    .diamond { width: 230px; height: 230px; margin: auto; transform: rotate(45deg); border: 2px solid var(--cyan); background: rgba(52,217,209,.08); display: flex; align-items: center; justify-content: center; }
+    .diamond span { transform: rotate(-45deg); text-align: center; font-size: 23px; font-weight: 800; }
+    .outcome { border-left: 5px solid var(--green); }
+    .outcome.block { border-left-color: var(--red); }
+    .outcome.notify { border-left-color: var(--blue); }
+    .timeline { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; position: relative; margin-top: 70px; }
+    .timeline::before { content: ""; position: absolute; top: 22px; left: 5%; right: 5%; height: 3px; background: linear-gradient(90deg, var(--cyan), var(--blue)); }
+    .step { position: relative; padding-top: 62px; text-align: center; font-size: 18px; color: #c6d7e5; }
+    .step::before { content: attr(data-n); position: absolute; top: 0; left: calc(50% - 23px); width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; background: #0b2131; border: 2px solid var(--cyan); color: var(--cyan); font-weight: 850; z-index: 1; }
+    .codebox { background: #050b12; border: 1px solid #263b4d; border-radius: 13px; padding: 22px; font-family: "SFMono-Regular", Consolas, monospace; font-size: 19px; line-height: 1.55; color: #bad0df; }
+    .function-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 28px; }
+    .fn { display: grid; grid-template-columns: 155px 1fr; gap: 12px; padding: 13px 15px; background: rgba(13,26,41,.78); border-left: 3px solid var(--cyan); }
+    .fn code { color: var(--amber); }
+    .risk { display: grid; grid-template-columns: 120px 1fr; gap: 18px; align-items: start; padding: 17px 20px; border-bottom: 1px solid var(--line); }
+    .risk-level { font-weight: 850; color: var(--amber); text-transform: uppercase; letter-spacing: 1px; }
+    .risk-level.red { color: var(--red); }
+    .risk p { margin: 0; font-size: 21px; }
+    ul.clean { list-style: none; padding: 0; margin: 0; }
+    ul.clean li { position: relative; padding-left: 30px; margin: 12px 0; }
+    ul.clean li::before { content: "›"; position: absolute; left: 5px; color: var(--cyan); font-weight: 900; }
+    .footer { position: absolute; left: 82px; bottom: 34px; color: #597187; font-size: 14px; letter-spacing: .7px; }
+    .slide-no { position: absolute; right: 82px; bottom: 31px; color: #71889c; font: 15px "SFMono-Regular", monospace; }
+    #controls { position: fixed; right: 20px; bottom: 18px; z-index: 5; display: flex; gap: 8px; opacity: .35; transition: opacity .2s; }
+    #controls:hover { opacity: 1; }
+    #controls button { color: white; background: #102338; border: 1px solid #31516a; border-radius: 8px; padding: 8px 13px; cursor: pointer; }
+    #progress { position: fixed; left: 0; bottom: 0; height: 4px; background: var(--cyan); z-index: 6; transition: width .2s; }
+    .small { font-size: 18px; }
+    @media print {
+      html, body { overflow: visible; background: white; }
+      #stage { position: static; width: auto; height: auto; transform: none !important; }
+      .slide { display: block !important; position: relative; width: 1600px; height: 900px; page-break-after: always; }
+      #controls, #progress { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main id="stage">
+    <section class="slide active">
+      <div class="eyebrow">Static reverse engineering • September 2026</div>
+      <h1>Inside the <span class="accent">WESP</span> platform</h1>
+      <p class="lead">How Microsoft's Windows Endpoint Security Platform turns kernel activity into policy decisions, enforcement, and structured telemetry.</p>
+      <div style="margin-top:80px" class="grid3">
+        <div class="card"><div class="stat">3,947</div><p>recovered local functions</p></div>
+        <div class="card"><div class="stat">47</div><p>named event types plus sentinel</p></div>
+        <div class="card"><div class="stat">29</div><p>outer control-request discriminants</p></div>
+      </div>
+      <div class="footer">wesp.sys • version 0.1.0.156346177+c3490e8c</div><div class="slide-no"></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Identity</div><h2>One driver, several security planes</h2>
+      <div class="grid2">
+        <div>
+          <p class="lead">WESP is a Rust-based kernel policy platform with a C minifilter bridge.</p>
+          <div class="card"><h3>What it watches</h3><div><span class="tag">Files</span><span class="tag">Registry</span><span class="tag">Processes</span><span class="tag">Threads</span><span class="tag">Images</span><span class="tag">Handles</span><span class="tag">KTM</span><span class="tag">Volumes</span><span class="tag">ELAM</span></div></div>
+        </div>
+        <div class="card">
+          <h3>Binary facts</h3>
+          <ul class="clean">
+            <li>AMD64 native Windows kernel driver</li>
+            <li>Microsoft development-signed</li>
+            <li>Exact stripped public PDB recovered</li>
+            <li>ASLR, NX, CFG, force-integrity, stack cookie</li>
+            <li>Imports only FLTMGR, NTOSKRNL, and HAL</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer">The policy model is shared; providers only supply different event arguments.</div><div class="slide-no"></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">System context</div><h2>The driver sits between kernel activity and security clients</h2>
+      <div class="boundary" data-label="kernel mode">
+        <div class="flow">
+          <div class="node"><b>Kernel providers</b>FLTMGR · CM · PS · OB · KTM · WNF</div><div class="arrow">→</div>
+          <div class="node"><b>WESP core</b>normalize · correlate · resolve</div><div class="arrow">→</div>
+          <div class="node"><b>Rule engine</b>BDD evaluation by client altitude</div><div class="arrow">→</div>
+          <div class="node"><b>Outcomes</b>allow · block · notify · update state</div>
+        </div>
+      </div>
+      <div class="arrow" style="text-align:center">↕</div>
+      <div class="boundary" data-label="user mode">
+        <div class="flow" style="margin:0">
+          <div class="node"><b>Control client</b>rules · collections · context keys</div>
+          <div class="node"><b>Queue workers</b>receive structured notifications</div>
+          <div class="node"><b>Security service</b>owns policy and responses</div>
+        </div>
+      </div>
+      <div class="footer">No WDM device object: communication uses Filter Manager ports.</div><div class="slide-no"></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Startup</div><h2><span class="mono">DriverEntry</span> builds the system in dependency order</h2>
+      <div class="timeline">
+        <div class="step" data-n="1">Rundown + feature configuration</div>
+        <div class="step" data-n="2">ETW / TraceLogging</div>
+        <div class="step" data-n="3">Persisted clients and boot ID</div>
+        <div class="step" data-n="4">Core stores and rule state</div>
+        <div class="step" data-n="5">Kernel callback providers</div>
+        <div class="step" data-n="6">Communication port</div>
+        <div class="step" data-n="7">Start filtering</div>
+      </div>
+      <div class="grid2" style="margin-top:90px">
+        <div class="card"><h3>Failure path</h3><p>Every successful stage has reverse-order cleanup if a later stage fails.</p></div>
+        <div class="card"><h3>Shutdown path</h3><p>Stop new work → wait for rundown → unregister callbacks → free shared state.</p></div>
+      </div>
+      <div class="footer">Central functions: DriverEntry, wesp::main, FsProvider::new, EspFltInitialize.</div><div class="slide-no"></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Acquisition</div><h2>Five callback families feed one event model</h2>
+      <div class="grid5">
+        <div class="card"><h3>Filesystem</h3><p>Create, read, write, metadata, security, FSCTL, sections, pipes, volumes, KTM.</p></div>
+        <div class="card"><h3>Registry</h3><p>Create/open/delete, values, rename, restore, query, security.</p></div>
+        <div class="card"><h3>Process</h3><p>Process create/exit, thread lifecycle, image loads.</p></div>
+        <div class="card"><h3>Objects</h3><p>Process, thread, and desktop handle create/duplicate.</p></div>
+        <div class="card"><h3>Boot</h3><p>ELAM notifications, WNF boot state, recovery remapping.</p></div>
+      </div>
+      <div class="flow" style="margin-top:52px"><div class="node"><b>Pre callback</b>capture intent + evaluate</div><div class="arrow">→</div><div class="node"><b>Correlation ID</b>retain minimal state</div><div class="arrow">→</div><div class="node"><b>Post callback</b>attach final status</div></div>
+      <div class="footer">Provider wrappers acquire rundown protection before touching shared WESP state.</div><div class="slide-no"></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Normalization</div><h2>A typed event makes unlike kernel APIs comparable</h2>
+      <div class="grid2">
+        <div class="card"><h3>Event context</h3><ul class="clean"><li>event type and unique ID</li><li>requestor thread/process/token</li><li>pre/post status and access state</li><li>provider-specific arguments</li><li>related object IDs</li></ul></div>
+        <div class="card"><h3>Stable event objects</h3><p>Thread · process · token · file object · stream · file · volume · disk · pipe · mailslot · desktop · registry key · KTM transaction</p></div>
+      </div>
+      <div class="flow"><div class="node"><b>Field requested</b>rule or notification asks</div><div class="arrow">→</div><div class="node"><b>Lazy resolver</b>query only when needed</div><div class="arrow">→</div><div class="node"><b>Field cache</b>reuse within the event</div></div>
+      <div class="footer">Lazy resolution avoids expensive token, path, signing, and object queries when no rule needs them.</div><div class="slide-no"></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Policy</div><h2>Rules compile into binary decision diagrams</h2>
+      <div class="flow">
+        <div class="node"><b>Incoming rule</b>schema + subrules + action</div><div class="arrow">→</div>
+        <div class="node"><b>Validation</b>types · IDs · cycles · capabilities</div><div class="arrow">→</div>
+        <div class="node"><b>BDD</b>deduplicated predicate graph</div><div class="arrow">→</div>
+        <div class="node"><b>Runtime</b>resolve predicates lazily</div>
+      </div>
+      <div class="grid3" style="margin-top:45px">
+        <div class="card"><h3>Comparands</h3><p>Numeric, string, binary, SID, EA, range, IP, path, security descriptor.</p></div>
+        <div class="card"><h3>Sources</h3><p>Event objects, requestor, process chain, file, registry, context keys.</p></div>
+        <div class="card"><h3>Collections</h3><p>Integer, binary, string, and pattern sets shared across predicates.</p></div>
+      </div>
+      <div class="footer">ClientRuleCollection::update_rules is the validation and commit boundary.</div><div class="slide-no"></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Decision</div><h2>One evaluation can enforce, report, and update state</h2>
+      <div class="decision">
+        <div><div class="card outcome"><h3>Allow</h3><p>Permit the kernel operation.</p></div><div class="card outcome block" style="margin-top:20px"><h3>Block</h3><p>Return provider-specific denial.</p></div></div>
+        <div class="diamond"><span>Evaluate clients<br>in altitude order</span></div>
+        <div><div class="card outcome notify"><h3>Notify</h3><p>Serialize selected properties.</p></div><div class="card" style="margin-top:20px;border-left:5px solid var(--amber)"><h3>Update</h3><p>Commit context-key changes.</p></div></div>
+      </div>
+      <p class="lead" style="margin:55px auto 0;text-align:center"><span class="mono">ForceAllow</span> exists only as an internal override and is rejected from persisted policy.</p>
+      <div class="footer">Representative core: RuleEngine::process_event_internal&lt;EventType&gt;.</div><div class="slide-no"></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Control plane</div><h2>A capability-gated minifilter protocol</h2>
+      <div class="grid2">
+        <div>
+          <div class="codebox">port = L"\\EspFilterPort"<br>outer request = 0x40 bytes<br>request tags = 0x00 .. 0x1c<br>connection roles = 0 .. 6</div>
+          <p class="small muted" style="margin-top:18px">Filter Manager's default ACL restricts connection to administrators and SYSTEM.</p>
+        </div>
+        <div class="flow" style="flex-direction:column;margin:0">
+          <div class="node"><b>1 · Connect context</b>kind, sizes, identity, queue/client role</div>
+          <div class="arrow">↓</div>
+          <div class="node"><b>2 · Token check</b><span class="mono">WESP://Permission</span> security attribute</div>
+          <div class="arrow">↓</div>
+          <div class="node"><b>3 · Message capability</b>tier-specific operation gate</div>
+        </div>
+      </div>
+      <div class="footer">Client-port and event-queue-port messages are deliberately non-interchangeable.</div><div class="slide-no"></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">User-mode companion</div><h2><span class="mono">espclient.dll</span> implements the complete consumer stack</h2>
+      <div class="flow">
+        <div class="node"><b>120 Esp* exports</b>C ABI used by security products</div><div class="arrow">→</div>
+        <div class="node"><b>C++ objects</b>client · queue · listener lifetimes</div><div class="arrow">→</div>
+        <div class="node"><b>Rust core</b>validate · serialize · relocate</div><div class="arrow">→</div>
+        <div class="node"><b>FltLib</b>connect · send · async receive</div>
+      </div>
+      <div class="grid3" style="margin-top:60px">
+        <div class="card"><h3>Exact match</h3><p>DLL and driver are version <span class="mono">0.1.0.156346177+c3490e8c</span>.</p></div>
+        <div class="card"><h3>Recovered</h3><p>1,521 functions, 9,591 call edges, 4,957 strings, and only four decompile failures.</p></div>
+        <div class="card"><h3>Delivery</h3><p>Thread-pool I/O feeds callbacks or an application-facing IOCP.</p></div>
+      </div>
+      <div class="footer">The DLL is a protocol implementation and SDK runtime—not a thin import wrapper.</div><div class="slide-no"></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Client model</div><h2>Each security client owns isolated policy objects</h2>
+      <div class="flow">
+        <div class="node"><b>Client</b>GUID · name · altitude · capability</div><div class="arrow">→</div>
+        <div class="node"><b>Rules</b>event interests + actions</div>
+        <div class="node"><b>Collections</b>shared predicate data</div>
+        <div class="node"><b>Context keys</b>state on client or objects</div>
+        <div class="node"><b>Queues</b>bounded notification delivery</div>
+      </div>
+      <div class="grid3" style="margin-top:60px">
+        <div class="card"><h3>Lifecycle</h3><p>register · connect · disconnect · unregister</p></div>
+        <div class="card"><h3>Mutation</h3><p>create · open · update · close · enumerate</p></div>
+        <div class="card"><h3>Safety</h3><p>GUID uniqueness · state machine · quotas · persistence transaction</p></div>
+      </div>
+      <div class="footer">Clients are sorted by altitude for deterministic multi-client evaluation.</div><div class="slide-no"></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Delivery</div><h2>Notifications move through bounded asynchronous queues</h2>
+      <div class="flow">
+        <div class="node"><b>Builder</b>select and size properties</div><div class="arrow">→</div>
+        <div class="node"><b>Payloads</b>serialize typed records</div><div class="arrow">→</div>
+        <div class="node"><b>Async queue</b>capacity + pending IDs</div><div class="arrow">→</div>
+        <div class="node"><b>FltSendMessage</b>kernel → user port</div><div class="arrow">→</div>
+        <div class="node"><b>Reply</b>complete in-flight state</div>
+      </div>
+      <div class="grid2" style="margin-top:60px">
+        <div class="card"><h3>Backpressure</h3><p>Maximum bytes, dropped-notification accounting, memory thresholds.</p></div>
+        <div class="card"><h3>Recovery</h3><p>Disconnect-safe port ownership, in-flight retention, queue clearing.</p></div>
+      </div>
+      <div class="footer">AsyncStateInner::enqueue is the central capacity and lifetime boundary.</div><div class="slide-no"></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Persistence</div><h2>Policy survives reboot through transactional registry state</h2>
+      <div class="codebox">\Registry\Machine\System\Wesp\PersistedStore<br>├── boot_id<br>├── clients\{guid}<br>│   ├── rules\{guid}<br>│   ├── collections\{guid}<br>│   └── event_queues\{guid}<br>└── recovery metadata</div>
+      <div class="flow" style="margin-top:42px"><div class="node"><b>Validate</b>decode complete candidate</div><div class="arrow">→</div><div class="node"><b>Stage</b>registry transaction</div><div class="arrow">→</div><div class="node"><b>Commit</b>memory + registry agree</div><div class="arrow">↘</div><div class="node"><b>Rollback</b>any error</div></div>
+      <div class="footer">Boot ID and recovery logic prevent stale kernel object identities from crossing reboots.</div><div class="slide-no"></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Function map</div><h2>The routines that explain most of the driver</h2>
+      <div class="function-list">
+        <div class="fn"><code>180001340</code><span><b>wesp::main</b><br><span class="muted">whole-driver orchestration</span></span></div>
+        <div class="fn"><code>180012ef0</code><span><b>connect::setup</b><br><span class="muted">identity and port role</span></span></div>
+        <div class="fn"><code>180004b80</code><span><b>server::message</b><br><span class="muted">control dispatch</span></span></div>
+        <div class="fn"><code>180041f90</code><span><b>ClientMessage::try_read</b><br><span class="muted">outer protocol parser</span></span></div>
+        <div class="fn"><code>1802d82e0</code><span><b>update_rules</b><br><span class="muted">policy transaction</span></span></div>
+        <div class="fn"><code>1801fd660</code><span><b>RuleEngine&lt;FileCreate&gt;</b><br><span class="muted">representative evaluation</span></span></div>
+        <div class="fn"><code>18034a0b0</code><span><b>EventDispatcher&lt;FileCreate&gt;</b><br><span class="muted">context and routing</span></span></div>
+        <div class="fn"><code>1800c00f0</code><span><b>NotificationBuilder</b><br><span class="muted">selected telemetry</span></span></div>
+        <div class="fn"><code>180302370</code><span><b>AsyncStateInner::enqueue</b><br><span class="muted">queue boundary</span></span></div>
+        <div class="fn"><code>18030ec70</code><span><b>load_client</b><br><span class="muted">persistent reconstruction</span></span></div>
+      </div>
+      <div class="footer">See IMPORTANT_FUNCTIONS.md for the curated function-level write-up.</div><div class="slide-no"></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Security review</div><h2>No kernel exploit confirmed; three client defects are actionable</h2>
+      <div class="risk"><div class="risk-level red">High impact</div><p>Any reachable Rust panic deliberately bugchecks the machine with tag <span class="mono">RUST</span>.</p></div>
+      <div class="risk"><div class="risk-level">Client DoS</div><p>Disconnecting a queue inside its callback self-deadlocks and reaches a five-minute fail-fast.</p></div>
+      <div class="risk"><div class="risk-level">Client DoS</div><p>Registration scans two caller UTF-16 pointers without a length or maximum.</p></div>
+      <div class="risk"><div class="risk-level">Delivery</div><p>A failed IOCP post only logs, potentially stranding an in-flight notification and payload.</p></div>
+      <div class="risk"><div class="risk-level" style="color:var(--green)">Hardening</div><p>User buffers are probed and copied; enum, alignment, length, overflow, capability, rundown, and transaction checks are pervasive.</p></div>
+      <div class="footer">Best material targets: cross-client authorization, nested rule parsing, and queue cancellation races.</div><div class="slide-no"></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Tooling</div><h2>What we can build against the recovered interface</h2>
+      <div class="grid3">
+        <div class="card"><h3>wespctl</h3><p>Connect, register, enumerate, and manage rules, collections, queues, and context keys.</p></div>
+        <div class="card"><h3>wespmon</h3><p>Receive, decode, filter, and export structured kernel notifications.</p></div>
+        <div class="card"><h3>wespexercise</h3><p>Generate filesystem, registry, process, thread, handle, pipe, and volume events.</p></div>
+        <div class="card"><h3>Protocol library</h3><p>Packed request/reply schemas, discriminants, validation, and status decoding.</p></div>
+        <div class="card"><h3>Persistence parser</h3><p>Offline inspection and validation of stored clients and policy objects.</p></div>
+        <div class="card"><h3>VM fuzzer</h3><p>Coverage-guided requests, Driver Verifier, WinDbg, snapshots, and crash triage.</p></div>
+      </div>
+      <p class="lead" style="margin-top:32px">Supported protocol operations are reachable. Arbitrary internal Rust functions are not safe user-mode APIs.</p>
+      <div class="footer">Best implementation target: Windows C++ with fltuser.h and FltLib.lib.</div><div class="slide-no"></div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">Takeaway</div><h2>WESP is a kernel event-policy operating system in miniature</h2>
+      <div class="flow"><div class="node"><b>Observe</b>many kernel providers</div><div class="arrow">→</div><div class="node"><b>Normalize</b>typed events and objects</div><div class="arrow">→</div><div class="node"><b>Decide</b>per-client BDD policy</div><div class="arrow">→</div><div class="node"><b>Act</b>enforce, notify, persist</div></div>
+      <div class="grid2" style="margin-top:72px">
+        <div class="card"><h3>Reverse-engineering package</h3><p>5,468 driver + client functions, call graphs, symbols, exports, strings, protocol map, and full pseudocode.</p></div>
+        <div class="card"><h3>Next engineering milestone</h3><p>Validate capability tiers and stress the recovered wire ABI in an isolated Windows VM.</p></div>
+      </div>
+      <div class="footer">REVERSE_ENGINEERING.md · ESPCLIENT_REVERSE_ENGINEERING.md · ESPCLIENT_SECURITY_REVIEW.md</div><div class="slide-no"></div>
+    </section>
+  </main>
+  <div id="controls"><button id="prev" aria-label="Previous slide">←</button><button id="next" aria-label="Next slide">→</button></div>
+  <div id="progress"></div>
+  <script>
+    const slides = [...document.querySelectorAll('.slide')];
+    let current = Math.max(0, Math.min(slides.length - 1, Number(location.hash.slice(1) || 1) - 1));
+    function scale() {
+      const s = Math.min(innerWidth / 1600, innerHeight / 900);
+      document.getElementById('stage').style.transform = `translate(-50%, -50%) scale(${s})`;
+    }
+    function show(index) {
+      current = Math.max(0, Math.min(slides.length - 1, index));
+      slides.forEach((slide, i) => {
+        slide.classList.toggle('active', i === current);
+        slide.querySelector('.slide-no').textContent = `${String(i + 1).padStart(2, '0')} / ${String(slides.length).padStart(2, '0')}`;
+      });
+      document.getElementById('progress').style.width = `${((current + 1) / slides.length) * 100}%`;
+      history.replaceState(null, '', `#${current + 1}`);
+    }
+    addEventListener('resize', scale);
+    addEventListener('keydown', e => {
+      if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); show(current + 1); }
+      if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); show(current - 1); }
+      if (e.key === 'Home') show(0);
+      if (e.key === 'End') show(slides.length - 1);
+    });
+    document.getElementById('prev').onclick = () => show(current - 1);
+    document.getElementById('next').onclick = () => show(current + 1);
+    let touchX = null;
+    addEventListener('touchstart', e => touchX = e.changedTouches[0].clientX, {passive:true});
+    addEventListener('touchend', e => { if (touchX !== null) { const d = e.changedTouches[0].clientX - touchX; if (Math.abs(d) > 60) show(current + (d < 0 ? 1 : -1)); touchX = null; } }, {passive:true});
+    scale(); show(current);
+  </script>
+</body>
+</html>

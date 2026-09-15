@@ -1,0 +1,12 @@
+name	start	end	size	r	w	x	initialized
+Headers	180000000	1800003ff	1024	true	false	false	true
+.text	180001000	1803d23ff	4002816	true	false	true	true
+.rdata	1803d3000	18040a9ff	227840	true	false	false	true
+.data	18040b000	18040b1ff	512	true	true	false	true
+.pdata	18040c000	1804167ff	43008	true	false	false	true
+PAGE	180417000	18041e7ff	30720	true	false	true	true
+.edata	18041f000	18041f7ff	2048	true	false	false	true
+INIT	180420000	1804233ff	13312	true	false	true	true
+.rsrc	180424000	1804243ff	1024	true	false	false	true
+.reloc	180425000	1804265ff	5632	true	false	false	true
+tdb	ff00000000	ff0000184f	6224	true	true	false	true

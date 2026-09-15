@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wesplab.invalid/schemas/wire-capture.schema.json",
+  "title": "WespLab symbolic wire capture",
+  "type": "object",
+  "required": ["schema", "envelope_hex", "regions", "relocations"],
+  "properties": {
+    "schema": {"const": "wesplab.wire-capture.v1"},
+    "abi": {"type": "string"},
+    "envelope_hex": {"type": "string", "pattern": "^[0-9a-fA-F]{128}$"},
+    "regions": {"type": "array", "items": {"type": "object", "required": ["name", "data_hex"], "properties": {
+      "name": {"type": "string"}, "data_hex": {"type": "string", "pattern": "^(?:[0-9a-fA-F]{2})*$"}
+    }}},
+    "relocations": {"type": "array", "items": {"type": "object", "required": ["envelope_offset", "region"], "properties": {
+      "envelope_offset": {"type": "integer", "minimum": 0, "maximum": 56, "multipleOf": 8},
+      "region": {"type": "string"}
+    }}}
+  }
+}
+

@@ -1,0 +1,8 @@
+{
+  "schemas": {
+    "7": [],
+    "8": [],
+    "10": []
+  },
+  "notes": "Add pointer regions only after confirming envelope_offset and fixed_size/size_offset for the exact ABI."
+}

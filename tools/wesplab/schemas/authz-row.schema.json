@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wesplab.invalid/schemas/authz-row.schema.json",
+  "title": "WespLab authorization matrix row",
+  "type": "object",
+  "required": ["schema", "process_id", "principal_label", "user_sid", "target", "exit_code"],
+  "properties": {
+    "schema": {"const": "wesplab.authz-matrix-row.v2"},
+    "process_id": {"type": "integer"}, "principal_label": {"type": "string"},
+    "user_sid": {"type": "string"}, "target": {"type": "string"},
+    "exit_code": {"type": "integer"}, "result": {"type": ["object", "null"]}
+  }
+}
+

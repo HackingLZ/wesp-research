@@ -1,0 +1,16 @@
+{
+  "schema": "wesplab.rule.v1",
+  "id": "auto",
+  "event": {
+    "type": "ProcessCreate",
+    "properties": [6, 20, 1]
+  },
+  "filter": null,
+  "action": {
+    "type": "notify",
+    "queue": "auto"
+  },
+  "lifetime": "temporary",
+  "order_group": 100
+}
+

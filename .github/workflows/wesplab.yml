@@ -1,0 +1,56 @@
+name: wesplab
+
+on:
+  push:
+    paths:
+      - 'tools/wesplab/**'
+      - '.github/workflows/wesplab.yml'
+  pull_request:
+    paths:
+      - 'tools/wesplab/**'
+      - '.github/workflows/wesplab.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s tools/wesplab/tests -v
+      - run: python tools/wesplab/wesplab.py protocol --kind request --id 0x1c
+      - run: python tools/wesplab/wesplab.py notification-decode tools/wesplab/examples/notification-capture.jsonl -o notification.json
+      - run: python tools/wesplab/wesplab.py rule-compile tools/wesplab/examples/process-create.rule.json -o rule-ir.json
+      - run: python tools/wesplab/wesplab.py wire-validate tools/wesplab/examples/wire-capture.json -o wire-validation.json
+      - run: node --check tools/wesplab/optional/frida/wesp_wire_agent.js
+
+  windows-build:
+    runs-on: windows-2025
+    strategy:
+      matrix:
+        architecture: [x64, ARM64]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S tools/wesplab -B build -A ${{ matrix.architecture }}
+      - name: Build
+        run: cmake --build build --config Release --parallel
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wesplab-runtime-${{ matrix.architecture }}
+          path: build/Release/wesplab-runtime.exe
+      - name: Parse PowerShell helpers
+        shell: pwsh
+        run: |
+          $bad = $false
+          Get-ChildItem tools/wesplab/scripts/*.ps1 | ForEach-Object {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count) { $bad = $true; $errors | Write-Error }
+          }
+          if ($bad) { exit 1 }

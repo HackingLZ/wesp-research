@@ -1,0 +1,17 @@
+{
+  "schema": "wesplab.rule.v1",
+  "event": {
+    "type": "ProcessCreate",
+    "properties": [6, 20, 1]
+  },
+  "filter": {
+    "op": "and",
+    "children": [
+      {"op": "property", "family": "process", "property": 20, "comparison": "suffix", "value": "\\cmd.exe"},
+      {"op": "not", "child": {"op": "property", "family": "process", "property": 6, "comparison": "eq", "value": 4}}
+    ]
+  },
+  "action": {"type": "notify", "queue": "auto"},
+  "lifetime": "temporary"
+}
+

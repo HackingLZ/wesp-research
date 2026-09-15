@@ -1,0 +1,9 @@
+.DS_Store
+.venv/
+dist/
+**/__pycache__/
+*.py[cod]
+*.etl
+*.dmp
+tools/wesplab/build/
+tools/wesplab/build-*/
